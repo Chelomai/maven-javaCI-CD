@@ -1,0 +1,48 @@
+name: Java CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # 1. ETAPA DE TEST & LINTING (Shift Left)
+  test:
+    name: Build & Test Java App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven' # Optimiza tiempo descargando dependencias previamente cacheadas
+
+      - name: Compilar y ejecutar pruebas unitarias (JUnit)
+        run: mvn clean test
+
+      - name: Generar Artifact / JAR de pruebas
+        run: mvn package -DskipTests
+
+  # 2. ETAPA DE DESPLIEGUE (Solo si 'test' se aprueba)
+  deploy:
+    name: Deploy Application
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Despliegue simulado
+        run: |
+          echo "Desplegando artefacto a producción/servidor..."
+          # Aquí van los comandos de despliegue (ej. Docker, AWS, Render, etc.)
